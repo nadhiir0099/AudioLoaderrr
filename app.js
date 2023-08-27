@@ -38,6 +38,8 @@ app.post("/convert-mp3", async (req,res) => {
         videoId+=inputLink.substring(equals+1,inputLink.lastIndexOf("&"))
     }else if(inputLink.indexOf("?")===28){
         videoId+=inputLink.substring(slash+1,inputLink.indexOf("?"))
+    }else{
+        videoId+=inputLink
     }
 
 
