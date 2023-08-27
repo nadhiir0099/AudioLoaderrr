@@ -1,3 +1,5 @@
+// npm run dev "this will start the server"
+
 //required packages
 const express = require("express");
 const fetch = require("node-fetch");
@@ -25,16 +27,19 @@ app.get("/",(req,res) =>{
 
 app.post("/convert-mp3", async (req,res) => {
     const inputLink = req.body.videoID;
-    let initial = 0;
-    let final = 0;
     let videoId ="";
-    if(inputLink.indexOf("&")!=-1){
-        initial += inputLink.indexOf("=") + 1;
-        final += inputLink.indexOf("&");
-        videoId += inputLink.slice(initial, final);
-    }else{
-        videoId +=inputLink.substring(17, inputLink.lengh) 
+    let equals = inputLink.indexOf("=")
+    let slash = inputLink.lastIndexOf("/")
+    if(inputLink.length===28){
+        videoId+=inputLink.substring(slash+1,inputLink.length)
+    }else if(inputLink.length===43) {
+        videoId+=inputLink.substring(equals+1,inputLink.length)
+    }else if(inputLink.lastIndexOf("&")===43) {
+        videoId+=inputLink.substring(equals+1,inputLink.lastIndexOf("&"))
+    }else if(inputLink.indexOf("?")===28){
+        videoId+=inputLink.substring(slash+1,inputLink.indexOf("?"))
     }
+
 
     console.log(`id: ${videoId}`)
     if(!videoId){
