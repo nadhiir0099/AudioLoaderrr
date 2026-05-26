@@ -65,7 +65,10 @@
                         <i class="fa-solid fa-music"></i> Download Song
                     </button>
                     <button type="button" class="tab-btn" id="tab-playlist">
-                        <i class="fa-solid fa-list-ul"></i> Download Playlist
+                        <i class="fa-brands fa-youtube"></i> YouTube Playlist
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-spotify">
+                        <i class="fa-brands fa-spotify"></i> Spotify Playlist
                     </button>
                 </div>
 
@@ -215,6 +218,7 @@
             // Mode Selectors
             const tabSong = document.getElementById('tab-song');
             const tabPlaylist = document.getElementById('tab-playlist');
+            const tabSpotify = document.getElementById('tab-spotify');
             let activeMode = 'song'; // default mode
             
             // Containers
@@ -307,6 +311,9 @@
                 activeMode = 'song';
                 tabSong.classList.add('active');
                 tabPlaylist.classList.remove('active');
+                tabSpotify.classList.remove('active');
+                
+                document.querySelector('.converter-card').classList.remove('spotify-mode');
                 
                 inputLabel.innerText = "Insert YouTube Video Link or ID";
                 inputField.value = "";
@@ -323,6 +330,9 @@
                 activeMode = 'playlist';
                 tabPlaylist.classList.add('active');
                 tabSong.classList.remove('active');
+                tabSpotify.classList.remove('active');
+                
+                document.querySelector('.converter-card').classList.remove('spotify-mode');
                 
                 inputLabel.innerText = "Insert YouTube Playlist Link";
                 inputField.value = "";
@@ -330,6 +340,25 @@
                 
                 inputIcon.className = "fa-solid fa-list-ul input-icon";
                 btnText.innerText = "Convert Playlist";
+                
+                resetUI();
+            });
+
+            tabSpotify.addEventListener('click', () => {
+                if (activeMode === 'spotify') return;
+                activeMode = 'spotify';
+                tabSpotify.classList.add('active');
+                tabSong.classList.remove('active');
+                tabPlaylist.classList.remove('active');
+                
+                document.querySelector('.converter-card').classList.add('spotify-mode');
+                
+                inputLabel.innerText = "Insert Spotify Playlist Link";
+                inputField.value = "";
+                inputField.placeholder = "e.g. https://open.spotify.com/playlist/...";
+                
+                inputIcon.className = "fa-brands fa-spotify input-icon";
+                btnText.innerText = "Parse Playlist";
                 
                 resetUI();
             });
@@ -396,7 +425,7 @@
                 submitBtn.disabled = true;
                 submitBtn.querySelector('.btn-spinner-icon').classList.add('spinning');
                 
-                const isSpotify = activeMode === 'playlist' && (inputValue.includes('spotify.com') || inputValue.includes('spotify.link'));
+                const isSpotify = activeMode === 'spotify' || (inputValue.includes('spotify.com') || inputValue.includes('spotify.link'));
                 let steps = activeMode === 'song' ? songLoadingSteps : playlistLoadingSteps;
                 if (isSpotify) {
                     steps = spotifyLoadingSteps;

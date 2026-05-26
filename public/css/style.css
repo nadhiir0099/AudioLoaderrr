@@ -685,6 +685,38 @@ body {
     box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15);
 }
 
+/* Spotify Tab Active and Spotify Theme Morph */
+.tab-btn.active#tab-spotify {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.18) 100%);
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.converter-card.spotify-mode .input-icon {
+    color: var(--accent-green) !important;
+}
+
+.converter-card.spotify-mode input:focus {
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25) !important;
+}
+
+.converter-card.spotify-mode input:focus + .input-icon {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8)) !important;
+}
+
+.converter-card.spotify-mode .glow-btn {
+    background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%) !important;
+    box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.4) !important;
+}
+
+.converter-card.spotify-mode .glow-btn:hover {
+    background: linear-gradient(135deg, #10d996 0%, #04825a 100%) !important;
+    box-shadow: 0 12px 30px -4px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+
 /* Playlist Results Container */
 .playlist-card {
     display: flex;
