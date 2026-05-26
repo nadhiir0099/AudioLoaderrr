@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="AudioLoader - The fastest premium YouTube to MP3 converter. Convert your favorite YouTube videos into high-quality MP3 audio files instantly and free.">
+    <meta name="keywords" content="youtube to mp3, yt to mp3, youtube converter, audio downloader, mp3 download, audioloader">
+    <meta name="author" content="Nadhir Chtioui">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/responsivity.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="shortcut icon" type="image/png" href="/css/img/logo.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Maven+Pro:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <title>AudioLoader - Convert YouTube to MP3 Instantly</title>
+</head>
+<body>
+    <!-- Ambient Background Blurry Glows & Noise -->
+    <div class="ambient-bg" aria-hidden="true">
+        <div class="glow-circle glow-pink-orange"></div>
+        <div class="glow-circle glow-purple-blue"></div>
+        <div class="glow-circle glow-rose"></div>
+        <div class="bg-noise"></div>
+    </div>
+
+    <header class="app-header">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <img id="logo" src="/css/img/logo.png" alt="AudioLoader Logo" class="brand-logo">
+                <span class="brand-title">AudioLoader</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="hero-section">
+            <h1 class="hero-title">Convert <span class="accent-text">YouTube</span> to MP3</h1>
+            <p class="hero-subtitle">Make your headphones happy with high-fidelity sound.</p>
+        </div>
+
+        <!-- Top-Level Page Navigation -->
+        <div class="page-tabs">
+            <button type="button" class="page-tab-btn active" id="page-tab-convert">
+                <i class="fa-solid fa-link"></i> Convert Link
+            </button>
+            <button type="button" class="page-tab-btn" id="page-tab-browse">
+                <i class="fa-solid fa-compass"></i> Browse Music
+            </button>
+        </div>
+
+        <!-- ========== Convert Link Panel ========== -->
+        <div id="convert-panel">
+            <div class="converter-card">
+                <!-- Mode Selector Tabs -->
+                <div class="mode-tabs">
+                    <button type="button" class="tab-btn active" id="tab-song">
+                        <i class="fa-solid fa-music"></i> Download Song
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-playlist">
+                        <i class="fa-solid fa-list-ul"></i> Download Playlist
+                    </button>
+                </div>
+
+                <form id="convert-form" class="convert-form">
+                    <label for="video-url" id="input-label" class="form-label">Insert YouTube Video Link or ID</label>
+                    <div class="input-wrapper">
+                        <i id="input-icon" class="fa-brands fa-youtube input-icon"></i>
+                        <input type="text" name="videoID" id="video-url" placeholder="e.g. https://www.youtube.com/watch?v=..." required autocomplete="off">
+                    </div>
+                    <button type="submit" id="convert-btn" class="glow-btn">
+                        <i class="fa-solid fa-arrows-rotate btn-spinner-icon"></i> 
+                        <span id="btn-text">Convert to MP3</span>
+                    </button>
+                </form>
+
+                <div class="dynamic-status-container" id="status-container">
+                    <!-- Dynamic loaders will be injected here -->
+                    <div class="loader-wrapper hidden" id="status-loader">
+                        <div class="custom-spinner"></div>
+                        <p class="loader-text" id="status-text">Processing link...</p>
+                    </div>
+                    
+                    <!-- Dynamic Success Card -->
+                    <div class="success-card hidden" id="success-result">
+                        <div class="success-icon-wrapper">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="song-details">
+                            <span class="details-label">Ready for Download</span>
+                            <p class="song-title" id="song-title-display">Song Title</p>
+                        </div>
+                        <a href="#" id="download-btn" class="download-btn" download target="_blank">
+                            <i class="fa-solid fa-download"></i> Download MP3
+                        </a>
+                        <button id="convert-another-btn" class="reset-btn">
+                            <i class="fa-solid fa-rotate-left"></i> Convert Another Video
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Playlist Success Card -->
+                    <div class="playlist-card hidden" id="playlist-result">
+                        <div class="playlist-header">
+                            <div class="playlist-meta">
+                                <span class="details-label">Playlist Processed</span>
+                                <p class="playlist-title" id="playlist-title-display">Playlist Title</p>
+                            </div>
+                            <button type="button" id="download-all-btn" class="download-btn zip-btn">
+                                <i class="fa-solid fa-download"></i> Download All
+                            </button>
+                        </div>
+                        <div class="playlist-tracks" id="playlist-tracks-display">
+                            <!-- Dynamic track rows will be injected here -->
+                        </div>
+                        <button id="convert-another-playlist-btn" class="reset-btn playlist-reset">
+                            <i class="fa-solid fa-rotate-left"></i> Convert Another Playlist
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Error Card -->
+                    <div class="error-card hidden" id="error-result">
+                        <div class="error-icon-wrapper">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </div>
+                        <p class="error-message" id="error-message-display">Something went wrong. Please check the URL and try again.</p>
+                        <button id="error-retry-btn" class="reset-btn retry">
+                            <i class="fa-solid fa-arrows-rotate"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Browse Music Panel ========== -->
+        <div id="browse-panel" class="hidden">
+            <div class="browse-panel">
+                <div class="browse-panel-header">
+                    <h2 class="browse-panel-title"><i class="fa-solid fa-fire"></i> Trending Now</h2>
+                    <span class="browse-track-count" id="browse-track-count"></span>
+                </div>
+                <div class="browse-search-wrapper">
+                    <input type="text" id="browse-search" placeholder="Search for any song or artist..." autocomplete="off">
+                    <i class="fa-solid fa-magnifying-glass browse-search-icon"></i>
+                </div>
+                <div class="browse-grid" id="browse-grid">
+                    <!-- Loading State -->
+                    <div class="browse-loading" id="browse-loading">
+                        <div class="custom-spinner"></div>
+                        <p class="browse-loading-text">Loading trending tracks...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="info-section">
+            <div class="info-wrapper">
+                <img src="/css/img/Ylogo.png" alt="YouTube Icon" class="info-img">
+                <div class="info-text">
+                    <h2>Meet <span class="brand-gradient">AudioLoader</span></h2>
+                    <p>Introducing the ultimate companion for your offline music library. Say goodbye to buffer delays, spotty connections, and pesky advertisements. Convert and download crisp audio streams from YouTube directly into premium MP3 files in a single tap.</p>
+                    <p class="tagline">ANYTIME, ANYWHERE.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="brand-logo-group">
+                    <img id="footer-logo" src="/css/img/logo.png" alt="AudioLoader Logo" class="brand-logo">
+                    <h2 class="brand-title">AudioLoader</h2>
+                </div>
+                <p class="footer-slogan">Free high-quality YouTube MP3 converter.</p>
+            </div>
+            
+            <div class="footer-divider"></div>
+            
+            <div class="footer-links">
+                <div class="links-column">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <a class="footer-link hover-border" href="mailto:nadhirn772@gmail.com">nadhirn772@gmail.com</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>Copyright © 2026 <a class="hover-border" href="#">AudioLoader</a> | All rights Reserved.</p>
+            <p class="author-credits"><i class="fa-solid fa-code"></i> Developed by <a class="hover-border" style="cursor: default;">Nadhir Chtioui</a></p>
+        </div>
+    </footer>
+
+    <!-- Client-side AJAX script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ==========================================
+            // Existing Convert Link Logic (unchanged)
+            // ==========================================
+            const form = document.getElementById('convert-form');
+            const inputField = document.getElementById('video-url');
+            const submitBtn = document.getElementById('convert-btn');
+            const inputLabel = document.getElementById('input-label');
+            const inputIcon = document.getElementById('input-icon');
+            const btnText = document.getElementById('btn-text');
+            
+            // Mode Selectors
+            const tabSong = document.getElementById('tab-song');
+            const tabPlaylist = document.getElementById('tab-playlist');
+            let activeMode = 'song'; // default mode
+            
+            // Containers
+            const statusLoader = document.getElementById('status-loader');
+            const statusText = document.getElementById('status-text');
+            const successResult = document.getElementById('success-result');
+            const songTitleDisplay = document.getElementById('song-title-display');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            const playlistResult = document.getElementById('playlist-result');
+            const playlistTitleDisplay = document.getElementById('playlist-title-display');
+            const playlistTracksDisplay = document.getElementById('playlist-tracks-display');
+            const downloadAllBtn = document.getElementById('download-all-btn');
+            
+            const errorResult = document.getElementById('error-result');
+            const errorMessageDisplay = document.getElementById('error-message-display');
+            
+            const convertAnotherBtn = document.getElementById('convert-another-btn');
+            const convertAnotherPlaylistBtn = document.getElementById('convert-another-playlist-btn');
+            const errorRetryBtn = document.getElementById('error-retry-btn');
+
+            // Download All button handler
+            downloadAllBtn.addEventListener('click', () => {
+                if (window.currentTracks && window.currentTracks.length) {
+                    window.currentTracks.forEach((track) => {
+                        const a = document.createElement('a');
+                        a.href = track.downloadUrl;
+                        a.download = `${track.title}.mp3`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    });
+                }
+            });
+
+            // Steps text list for loading realism
+            const songLoadingSteps = [
+                "Extracting video ID...",
+                "Contacting conversion APIs...",
+                "Retrieving audio tracks...",
+                "Converting to 320kbps MP3...",
+                "Finalizing audio compilation..."
+            ];
+
+            const playlistLoadingSteps = [
+                "Validating playlist URL...",
+                "Extracting tracks metadata...",
+                "Connecting to converter APIs...",
+                "Converting tracks sequentially (takes up to 1-2 mins)...",
+                "Saving MP3s to unique session directory...",
+                "Finalizing audio compilation..."
+            ];
+
+            const spotifyLoadingSteps = [
+                "Validating Spotify URL...",
+                "Fetching Spotify playlist details...",
+                "Extracting tracks metadata...",
+                "Formatting tracks list..."
+            ];
+            
+            let loadingInterval;
+
+            function runLoaderSimulation(steps) {
+                let currentStep = 0;
+                statusText.innerText = steps[0];
+                
+                loadingInterval = setInterval(() => {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        statusText.innerText = steps[currentStep];
+                    }
+                }, 4000);
+            }
+
+            function resetUI() {
+                clearInterval(loadingInterval);
+                statusLoader.classList.add('hidden');
+                successResult.classList.add('hidden');
+                playlistResult.classList.add('hidden');
+                errorResult.classList.add('hidden');
+                
+                form.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-spinner-icon').classList.remove('spinning');
+            }
+
+            // Tab Switching handlers
+            tabSong.addEventListener('click', () => {
+                if (activeMode === 'song') return;
+                activeMode = 'song';
+                tabSong.classList.add('active');
+                tabPlaylist.classList.remove('active');
+                
+                inputLabel.innerText = "Insert YouTube Video Link or ID";
+                inputField.value = "";
+                inputField.placeholder = "e.g. https://www.youtube.com/watch?v=...";
+                
+                inputIcon.className = "fa-brands fa-youtube input-icon";
+                btnText.innerText = "Convert to MP3";
+                
+                resetUI();
+            });
+
+            tabPlaylist.addEventListener('click', () => {
+                if (activeMode === 'playlist') return;
+                activeMode = 'playlist';
+                tabPlaylist.classList.add('active');
+                tabSong.classList.remove('active');
+                
+                inputLabel.innerText = "Insert YouTube Playlist Link";
+                inputField.value = "";
+                inputField.placeholder = "e.g. https://www.youtube.com/playlist?list=...";
+                
+                inputIcon.className = "fa-solid fa-list-ul input-icon";
+                btnText.innerText = "Convert Playlist";
+                
+                resetUI();
+            });
+
+            async function handleSpotifyConvert(btn) {
+                const title = btn.dataset.title;
+                const artist = btn.dataset.artist;
+
+                // Disable button and show spinner
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner spinning"></i> Converting...`;
+
+                try {
+                    const res = await fetch('/download-curated', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, artist })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success && data.song_link) {
+                        // Create download anchor replacement
+                        const container = btn.parentNode;
+                        const dlLink = document.createElement('a');
+                        dlLink.className = 'track-dl-btn download-btn success-btn';
+                        dlLink.href = data.song_link;
+                        dlLink.setAttribute('download', `${data.song_title || title}.mp3`);
+                        dlLink.setAttribute('target', '_blank');
+                        dlLink.innerHTML = `<i class="fa-solid fa-download"></i> Download`;
+                        
+                        // Replace button with link
+                        container.replaceChild(dlLink, btn);
+                        
+                        showToast('success', `"${title}" is ready!`);
+                    } else {
+                        // Reset button
+                        btn.disabled = false;
+                        btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Retry`;
+                        showToast('error', data.message || 'Conversion failed.');
+                    }
+                } catch (err) {
+                    console.error('Spotify track conversion error:', err);
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Retry`;
+                    showToast('error', 'Network error. Please try again.');
+                }
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const inputValue = inputField.value.trim();
+                if (!inputValue) return;
+
+                // Hide previous states
+                successResult.classList.add('hidden');
+                playlistResult.classList.add('hidden');
+                errorResult.classList.add('hidden');
+                
+                // Show loader and spinner
+                form.classList.add('hidden');
+                statusLoader.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.btn-spinner-icon').classList.add('spinning');
+                
+                const isSpotify = activeMode === 'playlist' && (inputValue.includes('spotify.com') || inputValue.includes('spotify.link'));
+                let steps = activeMode === 'song' ? songLoadingSteps : playlistLoadingSteps;
+                if (isSpotify) {
+                    steps = spotifyLoadingSteps;
+                }
+                runLoaderSimulation(steps);
+
+                try {
+                    const endpoint = isSpotify ? '/parse-spotify' : (activeMode === 'song' ? '/convert-mp3' : '/convert-playlist');
+                    const payload = isSpotify ? { spotifyUrl: inputValue } : (activeMode === 'song' ? { videoID: inputValue } : { playlistUrl: inputValue });
+                    
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    clearInterval(loadingInterval);
+                    statusLoader.classList.add('hidden');
+                    
+                    if (data.success) {
+                        if (activeMode === 'song') {
+                            // Single Song Success state
+                            songTitleDisplay.innerText = data.song_title || "YouTube Audio File";
+                            downloadBtn.href = data.song_link;
+                            successResult.classList.remove('hidden');
+                        } else if (isSpotify) {
+                            // Spotify Playlist Success state
+                            playlistTitleDisplay.innerText = data.playlistTitle || "Spotify Playlist";
+                            
+                            // Hide the "Download All" button for Spotify playlists
+                            downloadAllBtn.classList.add('hidden');
+
+                            // Clear previous tracks
+                            playlistTracksDisplay.innerHTML = '';
+                            
+                            // Inject track rows
+                            data.tracks.forEach((track, index) => {
+                                const row = document.createElement('div');
+                                row.className = 'track-row spotify-track';
+
+                                // Build cover: use img if URL exists, otherwise a styled placeholder
+                                const coverHtml = track.cover
+                                    ? `<img src="${track.cover}" class="track-thumbnail" alt="Track Cover"
+                                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                                        ><div class="track-thumb-placeholder" style="display:none"><i class="fa-solid fa-music"></i></div>`
+                                    : `<div class="track-thumb-placeholder"><i class="fa-solid fa-music"></i></div>`;
+
+                                row.innerHTML = `
+                                    <div class="track-info">
+                                        <div class="track-thumb-wrap">
+                                            ${coverHtml}
+                                        </div>
+                                        <div class="track-details">
+                                            <p class="track-title-text" title="${escapeAttr(track.title)}">${track.title}</p>
+                                            <span class="track-duration-text">
+                                                <i class="fa-solid fa-user" style="font-size:10px;color:var(--text-muted);"></i> ${track.artist}
+                                                &nbsp;&nbsp;<i class="fa-regular fa-clock"></i> ${track.duration}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="track-dl-btn spotify-convert-btn" data-title="${escapeAttr(track.title)}" data-artist="${escapeAttr(track.artist)}">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Convert
+                                    </button>
+                                `;
+                                playlistTracksDisplay.appendChild(row);
+                            });
+
+                            // Attach event handlers to the Convert buttons
+                            playlistTracksDisplay.querySelectorAll('.spotify-convert-btn').forEach(btn => {
+                                btn.addEventListener('click', () => handleSpotifyConvert(btn));
+                            });
+
+                            playlistResult.classList.remove('hidden');
+                        } else {
+                            // YouTube Playlist Success state
+                            playlistTitleDisplay.innerText = data.playlistTitle || "YouTube Playlist";
+                            
+                            // Show "Download All" button
+                            downloadAllBtn.classList.remove('hidden');
+                            
+                            // Clear previous tracks
+                            playlistTracksDisplay.innerHTML = '';
+                            
+                            // Inject track rows
+                            data.tracks.forEach((track, index) => {
+                                const row = document.createElement('div');
+                                row.className = 'track-row';
+                                row.innerHTML = `
+                                    <div class="track-info">
+                                        <img src="${track.thumbnail}" class="track-thumbnail" alt="Track Thumbnail">
+                                        <div class="track-details">
+                                            <p class="track-title-text" title="${escapeAttr(track.title)}">${track.title}</p>
+                                            <span class="track-duration-text"><i class="fa-regular fa-clock"></i> ${track.duration}</span>
+                                        </div>
+                                    </div>
+                                    <a href="${track.downloadUrl}" class="track-dl-btn" download="${track.title}.mp3">
+                                        <i class="fa-solid fa-download"></i> Download
+                                    </a>
+                                `;
+                                playlistTracksDisplay.appendChild(row);
+                            });
+                            window.currentTracks = data.tracks;
+                            
+                            playlistResult.classList.remove('hidden');
+                        }
+                    } else {
+                        // Business failure state
+                        errorMessageDisplay.innerText = data.message || "Failed to parse/convert. Please verify the URL and try again.";
+                        errorResult.classList.remove('hidden');
+                    }
+                } catch (err) {
+                    console.error("AJAX Error:", err);
+                    clearInterval(loadingInterval);
+                    statusLoader.classList.add('hidden');
+                    
+                    errorMessageDisplay.innerText = "A network error occurred. Please verify your internet connection and try again.";
+                    errorResult.classList.remove('hidden');
+                }
+            });
+
+            // Resets
+            convertAnotherBtn.addEventListener('click', () => {
+                inputField.value = "";
+                resetUI();
+            });
+
+            convertAnotherPlaylistBtn.addEventListener('click', () => {
+                inputField.value = "";
+                resetUI();
+            });
+
+            errorRetryBtn.addEventListener('click', () => {
+                resetUI();
+            });
+
+            // ==========================================
+            // Browse & Discover Logic
+            // ==========================================
+            const pageTabConvert = document.getElementById('page-tab-convert');
+            const pageTabBrowse = document.getElementById('page-tab-browse');
+            const convertPanel = document.getElementById('convert-panel');
+            const browsePanel = document.getElementById('browse-panel');
+            const browseGrid = document.getElementById('browse-grid');
+            const browseLoading = document.getElementById('browse-loading');
+            const browseSearch = document.getElementById('browse-search');
+            const browseTrackCount = document.getElementById('browse-track-count');
+            const browsePanelTitle = document.querySelector('.browse-panel-title');
+
+            let browseTrendingLoaded = false;
+            let browseDebounceTimer = null;
+
+            // Single shared Audio instance for previews
+            const previewAudio = new Audio();
+            let currentlyPlayingBtn = null;
+
+            // Page Tab Switching
+            pageTabConvert.addEventListener('click', () => {
+                pageTabConvert.classList.add('active');
+                pageTabBrowse.classList.remove('active');
+                convertPanel.classList.remove('hidden');
+                browsePanel.classList.add('hidden');
+                // Stop any playing preview
+                stopPreview();
+            });
+
+            pageTabBrowse.addEventListener('click', () => {
+                pageTabBrowse.classList.add('active');
+                pageTabConvert.classList.remove('active');
+                browsePanel.classList.remove('hidden');
+                convertPanel.classList.add('hidden');
+                // Load trending on first open
+                if (!browseTrendingLoaded) {
+                    loadTrending();
+                }
+            });
+
+            // Load Trending Tracks
+            async function loadTrending() {
+                browseTrackCount.textContent = '';
+                browseGrid.innerHTML = `
+                    <div class="browse-loading" id="browse-loading">
+                        <div class="custom-spinner"></div>
+                        <p class="browse-loading-text">Loading trending tracks...</p>
+                    </div>
+                `;
+                browsePanelTitle.innerHTML = '<i class="fa-solid fa-fire"></i> Trending Now';
+
+                try {
+                    const res = await fetch('/api/trending');
+                    const data = await res.json();
+
+                    if (data.success && data.tracks.length > 0) {
+                        renderBrowseTracks(data.tracks);
+                        browseTrendingLoaded = true;
+                    } else {
+                        showBrowseEmpty('No trending tracks available right now.');
+                    }
+                } catch (err) {
+                    console.error('Trending fetch error:', err);
+                    showBrowseEmpty('Failed to load trending tracks. Please try again.');
+                }
+            }
+
+            // Search with Debounce
+            browseSearch.addEventListener('input', () => {
+                clearTimeout(browseDebounceTimer);
+                const query = browseSearch.value.trim();
+
+                // Clear the count badge immediately to avoid showing stale numbers
+                browseTrackCount.textContent = '';
+
+                if (query.length === 0) {
+                    // Reset to trending
+                    browsePanelTitle.innerHTML = '<i class="fa-solid fa-fire"></i> Trending Now';
+                    if (browseTrendingLoaded) {
+                        loadTrending();
+                    }
+                    return;
+                }
+
+                browseDebounceTimer = setTimeout(async () => {
+                    browseGrid.innerHTML = `
+                        <div class="browse-loading">
+                            <div class="custom-spinner"></div>
+                            <p class="browse-loading-text">Searching for "${query}"...</p>
+                        </div>
+                    `;
+                    browsePanelTitle.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Search Results';
+
+                    try {
+                        const res = await fetch(`/api/search-tracks?q=${encodeURIComponent(query)}`);
+                        const data = await res.json();
+
+                        if (data.success && data.tracks.length > 0) {
+                            renderBrowseTracks(data.tracks);
+                        } else {
+                            showBrowseEmpty(`No results found for "${query}".`);
+                        }
+                    } catch (err) {
+                        console.error('Search error:', err);
+                        showBrowseEmpty('Search failed. Please try again.');
+                    }
+                }, 300);
+            });
+
+            // Render Browse Track Rows
+            function renderBrowseTracks(tracks) {
+                browseGrid.innerHTML = '';
+                browseTrackCount.textContent = `${tracks.length} tracks`;
+
+                tracks.forEach((track) => {
+                    const row = document.createElement('div');
+                    row.className = 'browse-track-row';
+                    row.innerHTML = `
+                        <img src="${track.cover}" alt="${track.title}" class="browse-cover" loading="lazy">
+                        <div class="browse-track-meta">
+                            <p class="browse-track-title" title="${track.title}">${track.title}</p>
+                            <p class="browse-track-artist">${track.artist}</p>
+                        </div>
+                        <div class="browse-track-actions">
+                            ${track.preview ? `<button class="preview-btn" data-preview="${track.preview}" title="Play 30s preview"><i class="fa-solid fa-play"></i></button>` : ''}
+                            <button class="browse-dl-btn" data-title="${escapeAttr(track.title)}" data-artist="${escapeAttr(track.artist)}">
+                                <i class="fa-solid fa-download"></i> <span class="dl-text">Download</span>
+                            </button>
+                        </div>
+                    `;
+                    browseGrid.appendChild(row);
+                });
+
+                // Attach preview handlers
+                browseGrid.querySelectorAll('.preview-btn').forEach(btn => {
+                    btn.addEventListener('click', () => handlePreview(btn));
+                });
+
+                // Attach download handlers
+                browseGrid.querySelectorAll('.browse-dl-btn').forEach(btn => {
+                    btn.addEventListener('click', () => handleBrowseDownload(btn));
+                });
+            }
+
+            // Show Empty State
+            function showBrowseEmpty(message) {
+                browseGrid.innerHTML = `
+                    <div class="browse-empty">
+                        <i class="fa-solid fa-music"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+                browseTrackCount.textContent = '';
+            }
+
+            // Escape HTML attribute helper
+            function escapeAttr(str) {
+                return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            // ==========================================
+            // Audio Preview Logic
+            // ==========================================
+            function handlePreview(btn) {
+                const previewUrl = btn.dataset.preview;
+                const icon = btn.querySelector('i');
+
+                // If same button is clicked again → pause
+                if (currentlyPlayingBtn === btn) {
+                    stopPreview();
+                    return;
+                }
+
+                // Stop any current preview
+                stopPreview();
+
+                // Play new preview
+                previewAudio.src = previewUrl;
+                previewAudio.volume = 0.7;
+                previewAudio.play();
+
+                icon.className = 'fa-solid fa-pause';
+                btn.classList.add('playing');
+                currentlyPlayingBtn = btn;
+            }
+
+            function stopPreview() {
+                previewAudio.pause();
+                previewAudio.currentTime = 0;
+                if (currentlyPlayingBtn) {
+                    const icon = currentlyPlayingBtn.querySelector('i');
+                    icon.className = 'fa-solid fa-play';
+                    currentlyPlayingBtn.classList.remove('playing');
+                    currentlyPlayingBtn = null;
+                }
+            }
+
+            // When preview ends naturally
+            previewAudio.addEventListener('ended', () => {
+                stopPreview();
+            });
+
+            // ==========================================
+            // Browse Download Logic
+            // ==========================================
+            async function handleBrowseDownload(btn) {
+                const title = btn.dataset.title;
+                const artist = btn.dataset.artist;
+                const icon = btn.querySelector('i');
+                const textSpan = btn.querySelector('.dl-text');
+
+                // Disable button and show loading
+                btn.disabled = true;
+                icon.className = 'fa-solid fa-spinner btn-spinner';
+                if (textSpan) textSpan.textContent = 'Converting...';
+
+                try {
+                    const res = await fetch('/download-curated', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, artist })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success && data.song_link) {
+                        // Trigger browser download
+                        const a = document.createElement('a');
+                        a.href = data.song_link;
+                        a.download = `${data.song_title || title}.mp3`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        showToast('success', `"${title}" is downloading!`);
+                    } else {
+                        showToast('error', data.message || 'Download failed.');
+                    }
+                } catch (err) {
+                    console.error('Browse download error:', err);
+                    showToast('error', 'Network error. Please try again.');
+                }
+
+                // Reset button
+                btn.disabled = false;
+                icon.className = 'fa-solid fa-download';
+                if (textSpan) textSpan.textContent = 'Download';
+            }
+
+            // ==========================================
+            // Toast Notification
+            // ==========================================
+            function showToast(type, message) {
+                // Remove any existing toast
+                const existing = document.querySelector('.browse-toast');
+                if (existing) existing.remove();
+
+                const toast = document.createElement('div');
+                toast.className = `browse-toast ${type}`;
+                const iconClass = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+                toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${message}`;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>
