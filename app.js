@@ -47,6 +47,93 @@ function extractVideoId(url) {
     return match ? match[1] : null;
 }
 
+// Rate Limiter to space out requests to RapidAPI (max 1 request every 1.5 seconds)
+class RateLimiter {
+    constructor(delayMs) {
+        this.delayMs = delayMs;
+        this.lastRequestTime = 0;
+    }
+
+    async wait() {
+        const now = Date.now();
+        const baseTime = Math.max(now, this.lastRequestTime);
+        this.lastRequestTime = baseTime + this.delayMs;
+        
+        const actualWait = baseTime - now;
+        if (actualWait > 0) {
+            await new Promise(resolve => setTimeout(resolve, actualWait));
+        }
+    }
+}
+
+const limiter = new RateLimiter(1500);
+
+async function fetchWithRateLimit(url, options) {
+    await limiter.wait();
+    return fetch(url, options);
+}
+
+// Parse API keys from .env
+const apiKeys = process.env.API_KEYS
+    ? process.env.API_KEYS.split(",").map(k => k.trim())
+    : [process.env.API_KEY];
+let currentKeyIndex = 0;
+
+function rotateApiKey() {
+    if (apiKeys.length <= 1) return;
+    const oldKey = apiKeys[currentKeyIndex];
+    currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+    console.log(`[API Key Rotator] Key ${oldKey.substring(0, 8)}... rate-limited. Rotating to key ${apiKeys[currentKeyIndex].substring(0, 8)}...`);
+}
+
+// Poll the RapidAPI endpoint until status is 'ok' or max retries are reached
+async function pollRapidAPI(videoId) {
+    const maxRetries = 15;
+    const delayMs = 3000; // Delay between polls for a specific track
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const currentKey = apiKeys[currentKeyIndex];
+            const apiRes = await fetchWithRateLimit(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
+                method: "GET",
+                headers: {
+                    "x-rapidapi-key": currentKey,
+                    "x-rapidapi-host": process.env.API_HOST
+                }
+            });
+
+            if (apiRes.status === 429) {
+                console.error(`[Poll API] Received 429 (Too Many Requests) for video ${videoId} with key index ${currentKeyIndex}.`);
+                rotateApiKey();
+                // retry immediately with new key without sleeping
+                continue;
+            }
+
+            if (!apiRes.ok) {
+                console.error(`[Poll API] Status error for video ${videoId}: ${apiRes.status}`);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                continue;
+            }
+
+            const data = await apiRes.json();
+
+            if (data.status === "ok" && data.link) {
+                return data;
+            } else if (data.status === "processing" || data.status === "waiting") {
+                console.log(`[Poll API] Video ${videoId} is ${data.status} (attempt ${attempt}/${maxRetries})...`);
+            } else if (data.status === "fail") {
+                console.error(`[Poll API] Failed status for videoId ${videoId}:`, data.msg);
+                return null;
+            }
+        } catch (err) {
+            console.error(`[Poll API] Error for videoId ${videoId}:`, err);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return null;
+}
+
 app.post("/convert-mp3", async (req,res) => {
     const inputLink = req.body.videoID;
     const videoId = extractVideoId(inputLink);
@@ -56,25 +143,13 @@ app.post("/convert-mp3", async (req,res) => {
         return res.status(400).json({success : false, message : "Please insert a valid YouTube video Link or ID"});
     }else{
         try {
-            const fetchAPI = await fetch(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
-                "method" : "GET",
-                "headers" : {
-                    "x-rapidapi-key" : process.env.API_KEY,
-                    "x-rapidapi-host" : process.env.API_HOST
-                }
-            });
-            
-            if (!fetchAPI.ok) {
-                throw new Error(`RapidAPI status error: ${fetchAPI.status}`);
-            }
-
-            const fetchResponse = await fetchAPI.json();
+            const apiData = await pollRapidAPI(videoId);
             const Emsg = "AudioLoad is still in beta and it has a limited number of downloads... \nPlease wait and come back later.";
             
-            if(fetchResponse.status === "ok") {
-                return res.json({success : true, song_title : fetchResponse.title, song_link : fetchResponse.link});
+            if(apiData && apiData.status === "ok" && apiData.link) {
+                return res.json({success : true, song_title : apiData.title, song_link : apiData.link});
             } else {
-                return res.json({success : false, message : fetchResponse.msg || Emsg});
+                return res.json({success : false, message : (apiData && apiData.msg) || Emsg});
             }
         } catch (error) {
             console.error("Fetch API error:", error);
@@ -125,53 +200,44 @@ app.post("/convert-playlist", async (req, res) => {
         const sessionDir = path.join(downloadsDir, sessionId);
         fs.mkdirSync(sessionDir, { recursive: true });
 
-        const convertedTracks = [];
+        const convertedTracks = new Array(tracks.length);
 
-        for (let i = 0; i < tracks.length; i++) {
-            const track = tracks[i];
+        const downloadPromises = tracks.map(async (track, index) => {
             const videoId = track.id;
             const title = track.title;
             const thumbnail = track.bestThumbnail ? track.bestThumbnail.url : track.thumbnails[0].url;
             const duration = track.duration;
 
             try {
-                const apiRes = await fetch(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
-                    method: "GET",
-                    headers: {
-                        "x-rapidapi-key": process.env.API_KEY,
-                        "x-rapidapi-host": process.env.API_HOST
-                    }
-                });
+                const apiData = await pollRapidAPI(videoId);
 
-                if (!apiRes.ok) {
-                    throw new Error(`RapidAPI status error: ${apiRes.status}`);
-                }
-
-                const apiData = await apiRes.json();
-
-                if (apiData.status === "ok" && apiData.link) {
+                if (apiData && apiData.status === "ok" && apiData.link) {
                     const cleanTitle = sanitizeFilename(title || apiData.title || "Track");
                     const filename = `${cleanTitle}.mp3`;
                     const destPath = path.join(sessionDir, filename);
 
                     await downloadFile(apiData.link, destPath);
 
-                    convertedTracks.push({
+                    convertedTracks[index] = {
                         id: videoId,
                         title: title || apiData.title,
                         thumbnail: thumbnail,
                         duration: duration,
                         downloadUrl: `/downloads/${sessionId}/${encodeURIComponent(filename)}`
-                    });
+                    };
                 } else {
-                    console.error(`Failed to convert track: ${title}. Msg: ${apiData.msg || 'Unknown error'}`);
+                    console.error(`Failed to convert track: ${title}`);
                 }
             } catch (err) {
                 console.error(`Error processing track ${title} (${videoId}):`, err);
             }
-        }
+        });
 
-        if (convertedTracks.length === 0) {
+        await Promise.all(downloadPromises);
+
+        const finalTracks = convertedTracks.filter(t => t !== undefined);
+
+        if (finalTracks.length === 0) {
             return res.status(500).json({ success: false, message: "Failed to convert any videos from this playlist." });
         }
 
@@ -186,7 +252,7 @@ app.post("/convert-playlist", async (req, res) => {
             success: true,
             playlistTitle: playlist.title,
             sessionId: sessionId,
-            tracks: convertedTracks
+            tracks: finalTracks
         });
 
     } catch (error) {
@@ -361,30 +427,18 @@ app.post("/download-curated", async (req, res) => {
         console.log(`[Browse Download] "${title}" by ${artist} → YouTube: ${videoId} (${video.title})`);
 
         // Step 2: Convert using existing RapidAPI pipeline
-        const fetchAPI = await fetch(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
-            method: "GET",
-            headers: {
-                "x-rapidapi-key": process.env.API_KEY,
-                "x-rapidapi-host": process.env.API_HOST
-            }
-        });
+        const apiData = await pollRapidAPI(videoId);
 
-        if (!fetchAPI.ok) {
-            throw new Error(`RapidAPI status error: ${fetchAPI.status}`);
-        }
-
-        const fetchResponse = await fetchAPI.json();
-
-        if (fetchResponse.status === "ok") {
+        if (apiData && apiData.status === "ok" && apiData.link) {
             return res.json({
                 success: true,
-                song_title: fetchResponse.title || `${title} - ${artist}`,
-                song_link: fetchResponse.link
+                song_title: apiData.title || `${title} - ${artist}`,
+                song_link: apiData.link
             });
         } else {
             return res.json({
                 success: false,
-                message: fetchResponse.msg || "Conversion failed. Please try again later."
+                message: (apiData && apiData.msg) || "Conversion failed. Please try again later."
             });
         }
     } catch (error) {
