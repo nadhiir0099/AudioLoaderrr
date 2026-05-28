@@ -196,10 +196,6 @@ app.post("/convert-playlist", async (req, res) => {
             return res.status(400).json({ success: false, message: "No tracks found in the playlist" });
         }
 
-        const sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-        const sessionDir = path.join(downloadsDir, sessionId);
-        fs.mkdirSync(sessionDir, { recursive: true });
-
         const convertedTracks = new Array(tracks.length);
 
         const downloadPromises = tracks.map(async (track, index) => {
@@ -212,18 +208,12 @@ app.post("/convert-playlist", async (req, res) => {
                 const apiData = await pollRapidAPI(videoId);
 
                 if (apiData && apiData.status === "ok" && apiData.link) {
-                    const cleanTitle = sanitizeFilename(title || apiData.title || "Track");
-                    const filename = `${cleanTitle}.mp3`;
-                    const destPath = path.join(sessionDir, filename);
-
-                    await downloadFile(apiData.link, destPath);
-
                     convertedTracks[index] = {
                         id: videoId,
                         title: title || apiData.title,
                         thumbnail: thumbnail,
                         duration: duration,
-                        downloadUrl: `/downloads/${sessionId}/${encodeURIComponent(filename)}`
+                        downloadUrl: apiData.link
                     };
                 } else {
                     console.error(`Failed to convert track: ${title}`);
@@ -241,17 +231,10 @@ app.post("/convert-playlist", async (req, res) => {
             return res.status(500).json({ success: false, message: "Failed to convert any videos from this playlist." });
         }
 
-        setTimeout(() => {
-            fs.rm(sessionDir, { recursive: true, force: true }, (err) => {
-                if (err) console.error(`Error cleaning up session directory ${sessionId}:`, err);
-                else console.log(`Cleaned up session directory ${sessionId} successfully.`);
-            });
-        }, 30 * 60 * 1000); // 30 minutes
-
         return res.json({
             success: true,
             playlistTitle: playlist.title,
-            sessionId: sessionId,
+            sessionId: "direct_links",
             tracks: finalTracks
         });
 
